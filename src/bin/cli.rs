@@ -12,7 +12,7 @@ use std::time::Duration;
     name = "mini-redis-cli",
     version,
     author,
-    about = "Issue Redis commands"
+    about = "发出 Redis 命令"
 )]
 struct Cli {
     #[clap(subcommand)]
@@ -28,68 +28,66 @@ struct Cli {
 #[derive(Subcommand, Debug)]
 enum Command {
     Ping {
-        /// Message to ping
+        /// 要 ping 的消息
         #[clap(value_parser = bytes_from_str)]
         msg: Option<Bytes>,
     },
-    /// Get the value of key.
+    /// 获取键的值。
     Get {
-        /// Name of key to get
+        /// 要获取的键的名称
         key: String,
     },
-    /// Set key to hold the string value.
+    /// 将键设置为保存字符串值。
     Set {
-        /// Name of key to set
+        /// 要设置的键的名称
         key: String,
 
-        /// Value to set.
+        /// 要设置的值。
         #[clap(value_parser = bytes_from_str)]
         value: Bytes,
 
-        /// Expire the value after specified amount of time
+        /// 在指定的时间后使值过期
         #[clap(value_parser = duration_from_ms_str)]
         expires: Option<Duration>,
     },
-    ///  Publisher to send a message to a specific channel.
+    /// 发布者将消息发送到特定通道。
     Publish {
-        /// Name of channel
+        /// 通道的名称
         channel: String,
 
         #[clap(value_parser = bytes_from_str)]
-        /// Message to publish
+        /// 要发布的消息
         message: Bytes,
     },
-    /// Subscribe a client to a specific channel or channels.
+    /// 将客户端订阅到特定通道或多个通道。
     Subscribe {
-        /// Specific channel or channels
+        /// 特定通道或多个通道
         channels: Vec<String>,
     },
 }
 
-/// Entry point for CLI tool.
+/// CLI 工具的入口点。
 ///
-/// The `[tokio::main]` annotation signals that the Tokio runtime should be
-/// started when the function is called. The body of the function is executed
-/// within the newly spawned runtime.
+/// `[tokio::main]` 注释表示在调用函数时应启动 Tokio 运行时。
+/// 函数的主体在新生成的运行时中执行。
 ///
-/// `flavor = "current_thread"` is used here to avoid spawning background
-/// threads. The CLI tool use case benefits more by being lighter instead of
-/// multi-threaded.
+/// 在这里使用 `flavor = "current_thread"` 是为了避免生成后台线程。
+/// CLI 工具的使用情况更适合轻量而不是多线程。
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> mini_redis::Result<()> {
-    // Enable logging
+    // 启用日志记录
     tracing_subscriber::fmt::try_init()?;
 
-    // Parse command line arguments
+    // 解析命令行参数
     let cli = Cli::parse();
 
-    // Get the remote address to connect to
+    // 获取要连接的远程地址
     let addr = format!("{}:{}", cli.host, cli.port);
 
-    // Establish a connection
+    // 建立连接
     let mut client = Client::connect(&addr).await?;
 
-    // Process the requested command
+    // 处理请求的命令
     match cli.command {
         Command::Ping { msg } => {
             let value = client.ping(msg).await?;
@@ -132,14 +130,14 @@ async fn main() -> mini_redis::Result<()> {
         }
         Command::Subscribe { channels } => {
             if channels.is_empty() {
-                return Err("channel(s) must be provided".into());
+                return Err("必须提供通道（们）".into());
             }
             let mut subscriber = client.subscribe(channels).await?;
 
-            // await messages on channels
+            // 等待通道上的消息
             while let Some(msg) = subscriber.next_message().await? {
                 println!(
-                    "got message from the channel: {}; message = {:?}",
+                    "从通道收到消息：{}；消息 = {:?}",
                     msg.channel, msg.content
                 );
             }

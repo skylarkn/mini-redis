@@ -12,6 +12,7 @@ An incomplete implementation of a Rust client and server. Used as a
 larger example of an idiomatic Tokio application.
 """
 
+# 用于指定生成哪些可执行文件
 [[bin]]
 name = "mini-redis-cli"
 path = "src/bin/cli.rs"
@@ -42,5 +43,6 @@ opentelemetry-otlp = { version = "0.13.0", optional = true }
 # Enable test-utilities in dev mode only. This is mostly for tests.
 tokio = { version = "1", features = ["test-util"] }
 
+# 启用或禁用 crate 的特性
 [features]
 otel = ["dep:opentelemetry", "dep:tracing-opentelemetry", "dep:opentelemetry-aws", "dep:opentelemetry-otlp"]
